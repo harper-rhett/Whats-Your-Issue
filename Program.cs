@@ -23,7 +23,7 @@ catch (Exception)
 
 while (personalAccessToken == null)
 {
-	Console.WriteLine("Please enter a GitHub Personal Access Token with \"repo\" scope enabled. You can generate one here: https://github.com/settings/tokens");
+	Console.WriteLine("Please enter a GitHub Personal Access Token with \"repo\" scope enabled. You can generate one here:\nhttps://github.com/settings/tokens");
 	string userInput = Console.ReadLine();
 	try
 	{
