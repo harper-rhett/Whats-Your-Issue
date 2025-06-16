@@ -6,9 +6,6 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Markdown;
 
-// Generate a personal access token here: https://github.com/settings/tokens
-// Make sure it is given "repo" scope.
-
 Console.WriteLine("Welcome to What's Your Issue!");
 
 GitHubClient client = new(new ProductHeaderValue("WhatsYourIssue"));
@@ -26,7 +23,7 @@ catch (Exception)
 
 while (personalAccessToken == null)
 {
-	Console.WriteLine("Please enter a GitHub Personal Access Token with \"repo\" scope enabled.");
+	Console.WriteLine("Please enter a GitHub Personal Access Token with \"repo\" scope enabled. You can generate one here: https://github.com/settings/tokens");
 	string userInput = Console.ReadLine();
 	try
 	{
