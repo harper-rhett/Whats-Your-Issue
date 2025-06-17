@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.IO;
+using System.Text;
 using Octokit;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -13,7 +14,8 @@ GitHubClient client = new(new ProductHeaderValue("WhatsYourIssue"));
 string personalAccessToken = null;
 try
 {
-	personalAccessToken = File.ReadAllText("Personal Access Token.txt");
+	byte[] bytes = File.ReadAllBytes("PersonalAccessToken.bin");
+	personalAccessToken = Encoding.UTF8.GetString(bytes);
 	Console.WriteLine("\nGitHub Personal Access Token found on disc.");
 }
 catch (Exception)
@@ -24,6 +26,7 @@ catch (Exception)
 while (personalAccessToken == null)
 {
 	Console.WriteLine("Please enter a GitHub Personal Access Token with \"repo\" scope enabled. You can generate one here:\nhttps://github.com/settings/tokens");
+	Console.Write("Personal Access Token: ");
 	string userInput = Console.ReadLine();
 	try
 	{
@@ -31,7 +34,8 @@ while (personalAccessToken == null)
 		personalAccessToken = userInput;
 		User user = await client.User.Current();
 		Console.WriteLine("Personal Access Token accepted. Saving to disc...");
-		File.WriteAllText("Personal Access Token.txt", personalAccessToken);
+		byte[] bytes = Encoding.UTF8.GetBytes(personalAccessToken);
+		File.WriteAllBytes("PersonalAccessToken.bin", bytes);
 	}
 	catch (Exception)
 	{
@@ -45,6 +49,7 @@ string repositoryOwner = null;
 while (repositoryOwner == null)
 {
 	Console.WriteLine("\nPlease enter the owner (user or organization) of the repositories you would like to export issues from.");
+	Console.Write("Owner Name: ");
 	string userInput = Console.ReadLine();
 	try
 	{
@@ -68,6 +73,7 @@ while (true)
 	while (repositoryName == null)
 	{
 		Console.WriteLine("\nPlease enter the name of a repository you would like to export issues from.");
+		Console.Write("Repository Name: ");
 		string userInput = Console.ReadLine();
 		try
 		{
@@ -90,16 +96,23 @@ while (true)
 		sanitizedIssues.Add(issue);
 	}
 
+	string outputPath = $"{Directory.GetCurrentDirectory()}\\Output";
+	Directory.CreateDirectory(outputPath);
+
 	Console.WriteLine("\nBeginning markdown export.");
 	string markdownText = await Helper.IssuesToMarkdown(client, repositoryOwner, repositoryName, sanitizedIssues);
-	File.WriteAllText($"{repositoryName} Issues.md", markdownText);
-	Console.WriteLine("Finished markdown export.");
+	string markdownFileName = $"{repositoryName}_Issues.md";
+	string markdownFilePath = $"{outputPath}\\{markdownFileName}";
+	File.WriteAllText(markdownFilePath, markdownText);
+	Console.WriteLine($"Exported markdown to {markdownFilePath}");
 
 	Console.WriteLine("\nBeginning PDF export.");
 
 	QuestPDF.Settings.License = LicenseType.Community;
 	Document document = Helper.MarkdownToPDF(markdownText);
 
-	document.GeneratePdf($"{repositoryName} Issues.pdf");
-	Console.WriteLine("Finished PDF export.");
+	string pdfFileName = $"{repositoryName}_Issues.pdf";
+	string pdfFilePath = $"{outputPath}\\{pdfFileName}";
+	document.GeneratePdf(pdfFilePath);
+	Console.WriteLine($"Exported PDF to {pdfFilePath}");
 }
