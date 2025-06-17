@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Octokit;
@@ -115,4 +116,10 @@ while (true)
 	string pdfFilePath = $"{outputPath}\\{pdfFileName}";
 	document.GeneratePdf(pdfFilePath);
 	Console.WriteLine($"Exported PDF to {pdfFilePath}");
+
+	Console.WriteLine("\nOpen output folder?");
+	Console.Write("Y/N: ");
+	string openFolderInput = Console.ReadLine();
+	if (openFolderInput.ToUpper() == "Y")
+		Process.Start("explorer.exe", outputPath);
 }
