@@ -19,27 +19,27 @@ client.Credentials = new(personalAccessToken);
 // Request repository owner
 string repositoryOwner = UserInterface.RequestRepositoriesOwner(client);
 
-// Issue request settings
-RepositoryIssueRequest issueRequest = new()
-{
-	State = ItemStateFilter.Open,
-};
-
 // Loop for requesting data
 while (true)
 {
 	// Request repository name
 	string repositoryName = UserInterface.RequestRepositoryName(client, repositoryOwner);
 
+	// Request content type
+	UserInterface.Content contentType = UserInterface.RequestContentType();
+
 	// Fetch repository issues
-	Console.WriteLine("\nFetching repository issues:");
-	IReadOnlyList<Issue> issues = await client.Issue.GetAllForRepository(repositoryOwner, repositoryName, issueRequest);
-	List<Issue> sanitizedIssues = new();
-	foreach (Issue issue in issues)
+	Console.Clear();
+	string markdownText = "Something went wrong...";
+	if (contentType is UserInterface.Content.Issues)
 	{
-		if (issue.PullRequest != null) continue;
-		Console.WriteLine($"- {issue.Title}");
-		sanitizedIssues.Add(issue);
+		List<Issue> issues = Helper.FetchIssues(client, repositoryOwner, repositoryName);
+		markdownText = Helper.IssuesToMarkdown(client, repositoryOwner, repositoryName, issues);
+	}
+	else if (contentType is UserInterface.Content.Milestones)
+	{
+		List<Milestone> milestones = Helper.FetchMilestones(client, repositoryOwner, repositoryName);
+		markdownText = Helper.MilestonesToMarkdown(client, repositoryOwner, repositoryName, milestones);
 	}
 
 	// Initialize output path
@@ -48,8 +48,7 @@ while (true)
 
 	// Export markdown
 	Console.WriteLine("\nBeginning markdown export.");
-	string markdownText = await Helper.IssuesToMarkdown(client, repositoryOwner, repositoryName, sanitizedIssues);
-	string markdownFileName = $"{repositoryName}_Issues.md";
+	string markdownFileName = $"{repositoryName}_{contentType.ToString()}.md";
 	string markdownFilePath = $"{outputPath}\\{markdownFileName}";
 	File.WriteAllText(markdownFilePath, markdownText);
 	Console.WriteLine($"Exported markdown to {markdownFilePath}");
@@ -58,7 +57,7 @@ while (true)
 	Console.WriteLine("\nBeginning PDF export.");
 	QuestPDF.Settings.License = LicenseType.Community;
 	Document document = Helper.MarkdownToPDF(markdownText);
-	string pdfFileName = $"{repositoryName}_Issues.pdf";
+	string pdfFileName = $"{repositoryName}_{contentType.ToString()}.pdf";
 	string pdfFilePath = $"{outputPath}\\{pdfFileName}";
 	document.GeneratePdf(pdfFilePath);
 	Console.WriteLine($"Exported PDF to {pdfFilePath}");
@@ -66,7 +65,7 @@ while (true)
 	// Open output folder
 	Console.WriteLine("\nOpen output folder?");
 	Console.Write("Y/N: ");
-	string openFolderInput = Console.ReadLine();
-	if (openFolderInput.ToUpper() == "Y")
+	string openFolderInput = Console.ReadLine().ToUpper();
+	if (openFolderInput == "Y")
 		Process.Start("explorer.exe", outputPath);
 }
