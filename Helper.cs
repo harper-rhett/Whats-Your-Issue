@@ -108,7 +108,7 @@ internal class Helper
 		{
 			markdown.WriteLine($"### {milestone.Title}");
 
-			markdown.WriteLine($"{milestone.DueOn.Value.Date.ToShortDateString()}");
+			if (milestone.DueOn is not null) markdown.WriteLine($"{milestone.DueOn.Value.Date.ToShortDateString()}");
 			if (milestone.Description.Length > 0) markdown.WriteLine(milestone.Description);
 
 			List<Issue> issues = FetchIssues(client, repositoryOwner, repositoryName, milestone.Title);
